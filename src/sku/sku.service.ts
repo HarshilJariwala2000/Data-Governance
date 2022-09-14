@@ -90,20 +90,66 @@ export class SkuService {
     async validateInputBody(categoryId:number,data:any){
         const rawAttributes = await this.getRawAttributes(categoryId)
         const tableColumns = Object.keys(data)
-        console.log(data[`${tableColumns[0]}`])
         for(let i = 0;i<tableColumns.length;i++){
             const matchingAttribute = await this.matchColumnNameToAttribute(tableColumns[i],rawAttributes)
             if(!matchingAttribute) throw new HttpException(`table column ${tableColumns[i]} does not exist`, HttpStatus.NOT_ACCEPTABLE)
             const valueIsValid = await this.validateValue(data[`${tableColumns[i]}`],matchingAttribute)
-            if(!valueIsValid) throw new HttpException(`Invalid Value`, HttpStatus.NOT_ACCEPTABLE)
+            if(!valueIsValid) throw new HttpException(`${tableColumns[i]}:${data[`${tableColumns[i]}`]} is not Valid`, HttpStatus.NOT_ACCEPTABLE)
         }
         return true;
     }
 
-    async saveNewProduct(categoryId:number,data:any){
+    async getInsertQuery(data:any, tableName:string){
+        const tableColumns = Object.keys(data)
+        let columns = '('+tableColumns.toString()+')'
+        let values = '('
+        for(let i = 0; i<tableColumns.length;i++){
+            if(i===tableColumns.length-1){
+                if(typeof(data[`${tableColumns[i]}`])==='string') values = values+'\''+`${data[`${tableColumns[i]}`]}`+'\''+')'
+                else values = values+`${data[`${tableColumns[i]}`]}`+')'
+            }else{
+                if(typeof(data[`${tableColumns[i]}`])==='string') values = values+'\''+`${data[`${tableColumns[i]}`]}`+'\''+','
+                else values = values+`${data[`${tableColumns[i]}`]}`+','
+            }
+        }
+        const insertQuery = `INSERT INTO ${tableName} ${columns} VALUES ${values}`
+        return insertQuery
+    }
+
+    async getUpdateQuery(skuId:number, data:any, tableName:string){
+        const tableColumns = Object.keys(data)
+        let set:string=''
+        for(let i =0; i<tableColumns.length;i++){
+            if(i===tableColumns.length-1){
+                if(typeof(data[`${tableColumns[i]}`])==='string') set = set+`${tableColumns[i]}='${data[`${tableColumns[i]}`]}'`
+                else set = set+`${tableColumns[i]}=${data[`${tableColumns[i]}`]}`
+            }else{
+                if(typeof(data[`${tableColumns[i]}`])==='string') set = set+`${tableColumns[i]}='${data[`${tableColumns[i]}`]}', `
+                else set = set+`${tableColumns[i]}=${data[`${tableColumns[i]}`]}, `
+            }
+        }
+        const updateQuery = `UPDATE ${tableName} SET ${set} WHERE sku_id=${skuId}`
+        return updateQuery
+    }
+
+    async editProduct(categoryId:number,data:any,skuId:number){
         const tableName = (await this.getPhysicalModel(categoryId)).tableName
         await this.validateInputBody(categoryId,data)
+        const updateQuery = await this.getUpdateQuery(skuId, data, tableName)
+        await this.pdmDataSource.manager.query(updateQuery)
+    }
 
+    async saveNewProduct(categoryId:number,data:any){
+        const tableName = (await this.getPhysicalModel(categoryId)).tableName
+        const tableColumns = Object.keys(data)
+        await this.validateInputBody(categoryId,data)
+        const insertQuery = await this.getInsertQuery(data, tableName)
+        await this.pdmDataSource.manager.query(insertQuery)
+
+    }
+    
+    async getDraftSKU(){
+        
     }
 }
 

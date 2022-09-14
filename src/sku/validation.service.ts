@@ -30,12 +30,12 @@ export class ValidationService{
 
     async textValidation(validationText:string,validationParams:IValidation){
         const specialChars = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/
-        // if(validationText.length>validationParams.textVldn.maxCharacters) return false
-        // if(validationText.length<validationParams.textVldn.minCharacters) return false
-        // if(validationParams.textVldn.lowerCaseOnly && validationText!=validationText.toLowerCase()) return false
-        // if(validationParams.textVldn.upperCaseOnly && validationText!=validationText.toUpperCase()) return false
-        // if(!validationParams.textVldn.spacingAllowed && validationText.indexOf(' ')>=0) return false
-        // if(!validationParams.textVldn.specialCharacters && specialChars.test(validationText)) return false
+        if(validationText.length>validationParams.textVldn.maxCharacters) return false
+        if(validationText.length<validationParams.textVldn.minCharacters) return false
+        if(validationParams.textVldn.lowerCaseOnly && validationText!=validationText.toLowerCase()) return false
+        if(validationParams.textVldn.upperCaseOnly && validationText!=validationText.toUpperCase()) return false
+        if(!validationParams.textVldn.spacingAllowed && validationText.indexOf(' ')>=0) return false
+        if(!validationParams.textVldn.specialCharacters && specialChars.test(validationText)) return false
         return true;
     }
 

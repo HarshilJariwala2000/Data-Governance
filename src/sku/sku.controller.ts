@@ -16,4 +16,9 @@ export class SkuController {
     async saveAsDraft(@Body() body:any):Promise<any>{
         return this.skuService.saveNewProduct(1, body)
     }
+
+    @Post('editProduct')
+    async editProduct(@Body() body:any){
+        return this.skuService.editProduct(1,body, 1)
+    }
 }
